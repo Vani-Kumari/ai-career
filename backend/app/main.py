@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import resume, analysis
 
+
 app = FastAPI(title="AI Career Copilot")
 
 app.add_middleware(
@@ -21,3 +22,5 @@ def health_check():
 
 app.include_router(resume.router)
 app.include_router(analysis.router)
+
+
