@@ -1,17 +1,22 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from app.services.ai_service import analyze_resume_job
+from app.services.llm_service import analyze_with_llm
 
 router = APIRouter()
 
-class AnalysisRequest(BaseModel):
+class AnalyzeRequest(BaseModel):
     resume_text: str
     job_description: str
 
+
 @router.post("/analyze")
-def analyze(data: AnalysisRequest):
-    result = analyze_resume_job(
+def analyze(data: AnalyzeRequest):
+
+    result = analyze_with_llm(
         data.resume_text,
         data.job_description
     )
-    return result
+
+    return {
+        "ai_response": result
+    }
