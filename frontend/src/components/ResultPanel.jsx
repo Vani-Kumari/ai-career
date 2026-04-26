@@ -1,53 +1,66 @@
-import SkillTag from "./SkillTag";
-
 function ResultPanel({ result }) {
   if (!result) {
     return (
-      <div className="bg-white p-5 rounded-2xl shadow-md">
-        <p className="text-gray-400">No analysis yet...</p>
+      <div className="bg-white/70 p-6 rounded-2xl shadow-xl border flex items-center justify-center">
+        <p className="text-gray-500">No results yet</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white p-5 rounded-2xl shadow-md space-y-4">
+    <div className="bg-white/70 backdrop-blur-lg p-6 rounded-2xl shadow-xl border">
 
-      {/* Score */}
-      <div>
-        <p className="text-sm text-gray-500">Match Score</p>
-
-        {/* ✅ FIXED HERE */}
-        <p className="text-3xl font-bold text-[#6366F1]">
-          {Math.round(result.match_score)}%
+      {/* SCORE */}
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold text-gray-600">Match Score</h2>
+        <p className="text-4xl font-bold text-indigo-600">
+          {result.match_score}%
         </p>
       </div>
 
-      {/* Matched Skills */}
-      <div>
-        <p className="text-sm text-gray-500 mb-1">Matched Skills</p>
+      {/* MATCHED */}
+      <div className="mb-4">
+        <h3 className="font-semibold text-green-600 mb-2">
+          Matched Skills
+        </h3>
         <div className="flex flex-wrap gap-2">
-          {result.matched_skills.map((s, i) => (
-            <SkillTag key={i} text={s} type="matched" />
+          {result.matched_skills.map((skill, i) => (
+            <span
+              key={i}
+              className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm"
+            >
+              {skill}
+            </span>
           ))}
         </div>
       </div>
 
-      {/* Missing Skills */}
-      <div>
-        <p className="text-sm text-gray-500 mb-1">Missing Skills</p>
+      {/* MISSING */}
+      <div className="mb-4">
+        <h3 className="font-semibold text-red-600 mb-2">
+          Missing Skills
+        </h3>
         <div className="flex flex-wrap gap-2">
-          {result.missing_skills.map((s, i) => (
-            <SkillTag key={i} text={s} type="missing" />
+          {result.missing_skills.map((skill, i) => (
+            <span
+              key={i}
+              className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm"
+            >
+              {skill}
+            </span>
           ))}
         </div>
       </div>
 
-      {/* Summary */}
+      {/* SUMMARY */}
       <div>
-        <p className="text-sm text-gray-500 mb-1">Summary</p>
-        <p className="text-gray-700">{result.summary}</p>
+        <h3 className="font-semibold text-gray-700 mb-1">
+          Summary
+        </h3>
+        <p className="text-gray-600 text-sm leading-relaxed">
+          {result.summary}
+        </p>
       </div>
-
     </div>
   );
 }

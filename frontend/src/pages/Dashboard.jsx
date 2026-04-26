@@ -1,31 +1,43 @@
 import { useState } from "react";
-import Header from "../components/Header";
 import InputPanel from "../components/InputPanel";
 import ResultPanel from "../components/ResultPanel";
-import { analyzeResume } from "../services/api";
+import { analyzeResume, analyzePDF } from "../services/api";
 
 function Dashboard() {
-  const [resume, setResume] = useState("");
-  const [jd, setJd] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleAnalyze = async () => {
+  const handleAnalyzeText = async (resume, jd) => {
     setLoading(true);
-    const data = await analyzeResume(resume, jd);
-    setResult(data);
-    setLoading(false);
+    try {
+      const data = await analyzeResume(resume, jd);
+      setResult(data);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAnalyzePDF = async (file, jd) => {
+    setLoading(true);
+    try {
+      const data = await analyzePDF(file, jd);
+      setResult(data);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#F2EAE0] p-6">
-      <Header />
+    <div className="min-h-screen bg-gradient-to-br from-[#f8fafc] to-[#e2e8f0] p-6">
+      
+      <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
+        AI Career Copilot 🚀
+      </h1>
 
-      <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6">
+      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-6">
         <InputPanel
-          setResume={setResume}
-          setJd={setJd}
-          handleAnalyze={handleAnalyze}
+          handleAnalyzeText={handleAnalyzeText}
+          handleAnalyzePDF={handleAnalyzePDF}
           loading={loading}
         />
         <ResultPanel result={result} />

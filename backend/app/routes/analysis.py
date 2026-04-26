@@ -1,22 +1,27 @@
-from fastapi import APIRouter
-from pydantic import BaseModel
+from fastapi import APIRouter, UploadFile, File, Form
 from app.services.llm_service import analyze_with_llm
+from app.services.pdf_service import extract_text_from_pdf
 
 router = APIRouter()
 
-class AnalyzeRequest(BaseModel):
-    resume_text: str
-    job_description: str
-
-
+# ✅ TEXT API (already exists)
 @router.post("/analyze")
-def analyze(data: AnalyzeRequest):
-
-    result = analyze_with_llm(
-        data.resume_text,
-        data.job_description
-    )
-
+def analyze(data: dict):
     return {
-        "ai_response": result
+        "ai_response": analyze_with_llm(
+            data["resume_text"],
+            data["job_description"]
+        )
     }
+
+# ✅ PDF API (THIS MUST MATCH EXACTLY)
+@router.post("/analyze-pdf")
+async def analyze_pdf(
+    file: UploadFile = File(...),
+    job_description: str = Form(...)
+):
+    resume_text = extract_text_from_pdf(file.file)
+
+    result = analyze_with_llm(resume_text, job_description)
+
+    return {"ai_response": result}

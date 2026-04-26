@@ -12,7 +12,6 @@ client = OpenAI(
 
 MODEL_NAME = "llama-3.3-70b-versatile"
 
-
 def analyze_with_llm(resume_text: str, job_description: str):
 
     prompt = f"""
@@ -21,15 +20,13 @@ You are an ATS resume analyzer.
 Return ONLY valid JSON.
 
 Rules:
-- match_score must be an INTEGER from 0 to 100
-- Do NOT use decimals
+- Do NOT include match_score
 - No markdown, no explanation
 
 Format:
 {{
-  "match_score": integer,
-  "matched_skills": [],
-  "missing_skills": [],
+  "resume_skills": [],
+  "job_skills": [],
   "summary": ""
 }}
 
@@ -49,8 +46,35 @@ Job Description:
 
     content = response.choices[0].message.content
 
-    # Clean possible markdown
+    # ✅ Clean markdown
     content = content.replace("```json", "").replace("```", "").strip()
 
-    # Convert string → dict
-    return json.loads(content)
+    try:
+        data = json.loads(content)
+    except:
+        return {
+            "match_score": 0,
+            "matched_skills": [],
+            "missing_skills": [],
+            "summary": "Error parsing AI response"
+        }
+
+    # ✅ Normalize skills
+    resume_skills = set(map(str.lower, data.get("resume_skills", [])))
+    job_skills = set(map(str.lower, data.get("job_skills", [])))
+
+    matched = list(resume_skills & job_skills)
+    missing = list(job_skills - resume_skills)
+
+    # ✅ Deterministic score
+    if len(job_skills) == 0:
+        score = 0
+    else:
+        score = int((len(matched) / len(job_skills)) * 100)
+
+    return {
+        "match_score": score,
+        "matched_skills": matched,
+        "missing_skills": missing,
+        "summary": data.get("summary", "")
+    }
