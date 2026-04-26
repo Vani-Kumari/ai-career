@@ -46,10 +46,11 @@ function InputPanel({ handleAnalyzeText, handleAnalyzePDF, loading }) {
       </div>
 
       {loading && (
-        <p className="mt-3 text-sm text-gray-500 animate-pulse">
-          Analyzing...
-        </p>
-      )}
+  <div className="mt-3 flex items-center gap-2 text-indigo-600">
+    <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+    <p>Analyzing with AI...</p>
+  </div>
+)}
     </div>
   );
 }
