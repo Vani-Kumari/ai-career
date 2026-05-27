@@ -78,3 +78,46 @@ Job Description:
         "missing_skills": missing,
         "summary": data.get("summary", "")
     }
+
+def generate_suggestions_and_email(resume_text: str, job_description: str):
+
+    prompt = f"""
+You are a career assistant.
+
+Return ONLY valid JSON.
+
+Format:
+{{
+  "suggestions": [],
+  "cold_email": ""
+}}
+
+Instructions:
+- Give 5-7 actionable resume improvement suggestions
+- Suggest missing skills/projects
+- Write a professional cold email for job application (short + strong)
+
+Resume:
+{resume_text}
+
+Job Description:
+{job_description}
+"""
+
+    response = client.chat.completions.create(
+        model=MODEL_NAME,
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
+    )
+
+    content = response.choices[0].message.content
+    content = content.replace("```json", "").replace("```", "").strip()
+
+    try:
+        return json.loads(content)
+    except:
+        return {
+            "suggestions": ["Error generating suggestions"],
+            "cold_email": "Error generating email"
+        }
