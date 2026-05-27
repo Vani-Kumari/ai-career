@@ -1,13 +1,35 @@
-// src/pages/Dashboard.jsx (or src/components/Dashboard.jsx)
-import { useState } from "react";
+// src/pages/Dashboard.jsx
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import InputPanel from "../components/InputPanel";
 import ResultPanel from "../components/ResultPanel";
 import { analyzeResume, analyzePDF, getSuggestions } from "../services/api";
 
 function Dashboard() {
+  const navigate = useNavigate();
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState(null);
+  const [user, setUser] = useState(null);
+
+  // Check authentication on mount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
+    
+    if (!token) {
+      navigate("/login");
+    } else {
+      if (userData) setUser(JSON.parse(userData));
+    }
+  }, [navigate]);
+
+  // Logout handler
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
 
   const handleAnalyzeText = async (resume, jd) => {
     if (!resume || !jd) {
@@ -29,13 +51,18 @@ function Dashboard() {
     try {
       const data = await analyzeResume(resume, jd);
       setResult(data);
-      setSuggestions(null); // Clear previous suggestions
+      setSuggestions(null);
     } catch (error) {
       console.error("Analysis error:", error);
       const errorMessage = error.response?.data?.detail || 
                           error.response?.data?.message || 
                           "Failed to analyze resume. Please try again.";
       alert(`Error: ${errorMessage}`);
+      
+      // If unauthorized (token expired), redirect to login
+      if (error.response?.status === 401) {
+        handleLogout();
+      }
     } finally {
       setLoading(false);
     }
@@ -47,13 +74,11 @@ function Dashboard() {
       return;
     }
     
-    // Validate file type
     if (file.type !== 'application/pdf') {
       alert("⚠️ Please upload a valid PDF file");
       return;
     }
     
-    // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       alert("⚠️ File size should be less than 10MB");
       return;
@@ -66,12 +91,14 @@ function Dashboard() {
       setSuggestions(null);
     } catch (error) {
       console.error("PDF Analysis error:", error);
-      console.error("Error response:", error.response?.data);
-      
       const errorMessage = error.response?.data?.detail || 
                           error.response?.data?.message || 
                           "Failed to analyze PDF. Please try pasting the text instead.";
       alert(`Error: ${errorMessage}`);
+      
+      if (error.response?.status === 401) {
+        handleLogout();
+      }
     } finally {
       setLoading(false);
     }
@@ -87,30 +114,61 @@ function Dashboard() {
     try {
       const data = await getSuggestions(resume, jd);
       setSuggestions(data);
-      setResult(data); // Also show in result panel
+      setResult(data);
     } catch (error) {
       console.error("Improvement suggestions error:", error);
       const errorMessage = error.response?.data?.detail || 
                           error.response?.data?.message || 
                           "Failed to get suggestions. Please try again.";
       alert(`Error: ${errorMessage}`);
+      
+      if (error.response?.status === 401) {
+        handleLogout();
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#eef2ff] via-[#f8fafc] to-[#e0f2fe] p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-[#eef2ff] via-[#f8fafc] to-[#e0f2fe]">
+      {/* Navbar */}
+      <nav className="bg-white/80 backdrop-blur-md shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                AI Career Copilot
+              </span>
+            </div>
+            <div className="flex items-center gap-4">
+              {user && (
+                <span className="text-sm text-gray-600">
+                  👋 Hello, {user.name || user.email}
+                </span>
+              )}
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-lg transition"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto p-6">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
-            AI Career Copilot 🚀
+            Resume Analyzer 🚀
           </h1>
-          <p className="text-gray-600">Upload your resume and job description for AI-powered analysis</p>
+          <p className="text-gray-600">
+            Upload your resume and job description for AI-powered analysis
+          </p>
         </div>
 
-        {/* Main Content */}
         <div className="grid lg:grid-cols-2 gap-6">
           <InputPanel
             handleAnalyzeText={handleAnalyzeText}
@@ -121,7 +179,6 @@ function Dashboard() {
           <ResultPanel result={result || suggestions} />
         </div>
 
-        {/* Footer */}
         <div className="text-center mt-8 text-sm text-gray-500">
           <p>Powered by AI • Your data is processed securely</p>
         </div>
